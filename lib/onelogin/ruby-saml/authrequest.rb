@@ -9,6 +9,9 @@ module Onelogin
   module Saml
   include REXML
     class Authrequest
+
+      attr_reader :base64_request
+
       def create(settings, params = {})
         request_doc = create_authentication_xml_doc(settings)
 
@@ -18,7 +21,7 @@ module Onelogin
         Logging.debug "Created AuthnRequest: #{request}"
 
         deflated_request  = Zlib::Deflate.deflate(request, 9)[2..-5]
-        base64_request    = Base64.encode64(deflated_request)
+        @base64_request    = Base64.encode64(deflated_request)
         encoded_request   = CGI.escape(base64_request)
         params_prefix     = (settings.idp_sso_target_url =~ /\?/) ? '&' : '?'
         request_params    = "#{params_prefix}SAMLRequest=#{encoded_request}"
@@ -36,13 +39,17 @@ module Onelogin
         # Create AuthnRequest root element using REXML 
         request_doc = REXML::Document.new
 
-        root = request_doc.add_element "samlp:AuthnRequest", { "xmlns:samlp" => "urn:oasis:names:tc:SAML:2.0:protocol" }
+        root = request_doc.add_element "samlp:AuthnRequest", {
+          "xmlns:samlp" => "urn:oasis:names:tc:SAML:2.0:protocol",
+          "xmlns:saml" => "urn:oasis:names:tc:SAML:2.0:assertion"
+        }
         root.attributes['ID'] = uuid
         root.attributes['IssueInstant'] = time
         root.attributes['Version'] = "2.0"
         root.attributes['Destination'] = settings.idp_sso_target_url unless settings.idp_sso_target_url.nil?
         root.attributes['IsPassive'] = settings.passive unless settings.passive.nil?
         root.attributes['ProviderName'] = settings.provider_name unless settings.provider_name.nil?
+        root.attributes['ProtocolBinding'] = settings.protocol_binding unless settings.protocol_binding.nil?
 
         # Conditionally defined elements based on settings
         if settings.assertion_consumer_service_url != nil

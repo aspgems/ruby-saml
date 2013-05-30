@@ -13,6 +13,9 @@ module Onelogin
       attr_accessor :idp_slo_target_url
       attr_accessor :name_identifier_value
       attr_accessor :sessionindex
+      attr_accessor :passive
+      attr_accessor :provider_name
+      attr_accessor :protocol_binding
     end
   end
 end
