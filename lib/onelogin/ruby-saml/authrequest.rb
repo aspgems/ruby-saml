@@ -10,10 +10,10 @@ module Onelogin
   include REXML
     class Authrequest
 
-      attr_reader :base64_request
+      attr_reader :base64_request, :request_doc
 
       def create(settings, params = {})
-        request_doc = create_authentication_xml_doc(settings)
+        @request_doc = create_authentication_xml_doc(settings)
 
         request = ""
         request_doc.write(request)
@@ -38,6 +38,7 @@ module Onelogin
         time = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%S")
         # Create AuthnRequest root element using REXML 
         request_doc = REXML::Document.new
+        request_doc.context[:attribute_quote] = :quote
 
         root = request_doc.add_element "samlp:AuthnRequest", {
           "xmlns:samlp" => "urn:oasis:names:tc:SAML:2.0:protocol",
